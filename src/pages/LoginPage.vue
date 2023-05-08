@@ -5,7 +5,7 @@
             <div class="form-content">
                 <div class="form-group">
                     <label>帳號</label>
-                    <input type="text" v-model="userId" maxlength="20" required>
+                    <input type="text" v-model="userId" maxlength="20" required >
                 </div>
                 <div class="form-group">
                     <label>密碼</label>
@@ -14,9 +14,12 @@
                 <div>
                     <a href="#" id="forgotPasswordLink">忘記密碼</a>
                 </div>
+                <div class="warn-message" v-if="isShowSystemMessage">
+                    <label>系統訊息: {{ systemMessage }}</label>
+                </div>
             </div>
             <div class="form-operations">
-                <button type="button" class="btn btn-brand-outline">註冊</button>
+                <button type="button" class="btn btn-brand-outline" @click="toRegisterPage">註冊</button>                
                 <button type="button" class="btn btn-brand" @click="login">登入</button>
             </div>
         </form>
@@ -24,18 +27,66 @@
 </template>
 
 <script>
+import { ref, watch } from "vue";
+import { useRouter } from "vue-router";
+
 export default {
-    data() {
-        return {
-            userId: "",
-            password: ""
+    setup() {
+        const userId = ref('');
+        const password = ref('');
+        const systemMessage = ref('');
+        const isShowSystemMessage = ref(false);
+
+        const router = useRouter();
+
+        function toRegisterPage(){
+            router.push('/register');
         }
-    },
-    methods: {
-        login() {
-            const userId = this.userId;
-            const password = this.password;
-            console.log(`userId: ${userId}, password: ${password}`);
+
+        function getValidateMessage() {
+            let userIdValue = userId.value;
+            let passwordValue = password.value;
+
+            if (userIdValue === null || userIdValue === undefined || userIdValue === '') { return "帳號未輸入"; }
+            if (passwordValue === null || passwordValue === undefined || passwordValue === '') { return "密碼未輸入"; }
+
+            return "";
+        }
+
+        function login() {
+            let validateMessage = getValidateMessage();
+            if (validateMessage && validateMessage != '') { 
+                systemMessage.value = validateMessage;
+                isShowSystemMessage.value = true;
+            }else{
+                systemMessage.value = '';
+                isShowSystemMessage.value = false;
+
+                router.push('/home');
+            }
+        }
+
+        watch(userId, (currentValue) => {
+            if (currentValue && currentValue != '') {
+                systemMessage.value = '';
+                isShowSystemMessage.value = false;
+            }
+        })
+
+        watch(password, (currentValue) => {
+            if (currentValue && currentValue != '') {
+                systemMessage.value = '';
+                isShowSystemMessage.value = false;
+            }
+        })
+
+        return {
+            userId,
+            password,
+            systemMessage,
+            isShowSystemMessage,
+            toRegisterPage,
+            login,
         }
     }
 }
@@ -54,7 +105,7 @@ form {
     position: relative;
     top: 15%;
     width: 250px;
-    height: 280px;
+    height: 300px;
 
     border: 1px solid #ccc;
     border-radius: 10px;
@@ -66,9 +117,9 @@ form {
     display: grid;
     grid-template-rows: 60px 1fr 40px;
     grid-template-areas: "title"
-                        "content"
-                        "operations"
-                        "footer";
+        "content"
+        "operations"
+        "footer";
 }
 
 .form-header {
@@ -112,6 +163,11 @@ form {
 #forgotPasswordLink {
     text-decoration: none;
     font-size: 0.8rem;
+}
+
+.warn-message {
+    color: var(--color-danger);
+    text-align: center;
 }
 
 .form-operations {
